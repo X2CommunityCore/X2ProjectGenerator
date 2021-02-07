@@ -1,5 +1,8 @@
 # X2ProjectGenerator
 
+This script will make sure that every folder and file in project folder is included in the project and sorted in correct order.
+Already existing entries won't be touched - you can run this script as many as you like.
+
 ## Download
 
 This tool is built in C# using .Net Framework 4.7.2. Your options are:
@@ -20,5 +23,5 @@ X2ProjectGenerator.exe "C:\Users\xyman\Documents\Firaxis ModBuddy\XCOM - War of 
 
 *Note that the quotes (`"`) are important - otherwise script will break (if there are spaces in folder names)*
 
-This script will make sure that every folder and file in project folder is included in the project and sorted in correct order.
-Already existing entries won't be touched - you can run this script as many as you like.
+**TIP**: to open a command line prompt in the folder where you downloaded the `X2ProjectGenerator.exe`
+simply type `cmd` in the file explorer's address bar and hit enter
