@@ -1,6 +1,13 @@
 # X2ProjectGenerator
 
-### Usage
+## Download
+
+This tool is built in C# using .Net Framework 4.7.2. Your options are:
+
+* Clone the project and build it yourself
+* Click on the releases (right sidebar on repo home on github web non-mobile) - the latest release has a built `.exe` attached
+
+## Usage
 
 * Create an empty or default mod project
 * Close ModBuddy
