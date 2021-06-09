@@ -35,3 +35,23 @@ Don't write to the project file. Instead throw an exception if entries would be 
 ### `--exclude-contents`
 
 Folder names starting with `Content` will be ignored (commonly `Content` and `ContentForCook`).
+
+## Examples
+
+### Automatically verify project as part of build process
+
+If using a Powershell-based build script (like [X2ModBuildCommon](https://github.com/X2CommunityCore/X2ModBuildCommon)), you
+can add this to your `build.ps1` (requires X2ProjectGenerator.exe in `PATH` environment variable):
+
+```ps1
+if ($null -ne (Get-Command "X2ProjectGenerator.exe" -ErrorAction SilentlyContinue)) {
+    Write-Host "Verifying project file..."
+    &"X2ProjectGenerator.exe" "$srcDirectory\YOUR_MOD_NAME_HERE" "--exclude-contents" "--verify-only"
+    if ($LASTEXITCODE -ne 0) {
+        ThrowFailure "Errors in project file."
+    }
+}
+else {
+    Write-Host "Skipping verification of project file."
+}
+```
