@@ -9,9 +9,20 @@ namespace X2ProjectGenerator
 {
     internal static class Program
     {
-        public static void Main(string[] args)
+        public static void Main(string[] _args)
         {
-            string projectPath = args[0];
+            HashSet<string> args = new HashSet<string>(_args);
+
+            bool verifyOnly = args.Remove("--verify-only");
+            bool excludeContents = args.Remove("--exclude-contents");
+
+            if (args.Count == 0) {
+                throw new Exception("Missing project directory");
+            } else if (args.Count > 1) {
+                throw new Exception("Too many arguments");
+            }
+
+            string projectPath = args.First();
             Console.WriteLine("Project directory is " + projectPath);
 
             string projectFilePath = GetX2ProjectFilePath(projectPath);
@@ -21,12 +32,21 @@ namespace X2ProjectGenerator
 
             XmlDocument projectFile = LoadProjectFile(projectFilePath);
 
-            string[] files = Directory.EnumerateFiles(projectPath, "*", SearchOption.AllDirectories)
+            IEnumerable<string> filesQuery = Directory.EnumerateFiles(projectPath, "*", SearchOption.AllDirectories)
                 .Where(path => path != projectFilePath)
                 .Select(path => path.Split(new[] {projectPath}, 2, StringSplitOptions.RemoveEmptyEntries))
                 .Select(strings => strings[0])
-                .Select(path => path.TrimStart('\\'))
-                .ToArray();
+                .Select(path => path.Replace('/', '\\'))
+                .Select(path => path.TrimStart('\\'));
+
+            if (excludeContents) {
+                filesQuery = filesQuery.Where(path => {
+                    string[] components = path.Split(new[] {"\\"}, 2, StringSplitOptions.RemoveEmptyEntries);
+                    return components.Count() < 2 || !components[0].StartsWith("Content");
+                });
+            }
+
+            string[] files = filesQuery.ToArray();
 
             IEnumerable<string> folderPaths = files
                 .SelectMany(path =>
@@ -44,17 +64,22 @@ namespace X2ProjectGenerator
                         {
                             folderPath += folders[j] + "\\";
                         }
-
+                        folderPath = folderPath.TrimEnd('\\');
                         result.Add(folderPath);
                     }
-
                     return result;
                 })
                 .Distinct()
                 .ToArray();
 
-            UpdateProjectFile(projectFile, files, folderPaths);
-            projectFile.Save(projectFilePath);
+            if (verifyOnly) {
+                if (!CheckProjectFile(projectFile, files, folderPaths)) {
+                    throw new Exception("Project file missing folders or files.");
+                }
+            } else {
+                UpdateProjectFile(projectFile, files, folderPaths);
+                projectFile.Save(projectFilePath);
+            }
         }
 
         private static string GetX2ProjectFilePath(string projectPath)
@@ -80,6 +105,45 @@ namespace X2ProjectGenerator
             xmlDocument.Load(filePath);
 
             return xmlDocument;
+        }
+
+        private static bool CheckProjectFile(
+            XmlDocument projectFile,
+            IEnumerable<string> filePaths,
+            IEnumerable<string> folderPaths
+        )
+        {
+            XmlNode projectNode = projectFile.ChildNodes.Cast<XmlNode>().First(node => node.Name == "Project");
+            IEnumerable<XmlNode> itemNodes = projectNode.ChildNodes
+                .Cast<XmlNode>()
+                .Where(node => node.Name == "ItemGroup")
+                .ToList();
+
+            List<XmlNode> nodes = itemNodes
+                .SelectMany(node => node.ChildNodes.Cast<XmlNode>())
+                .ToList();
+
+            IEnumerable<string> existingFiles = GetExistingPaths(nodes, "Content");
+            IEnumerable<string> existingFolders = GetExistingPaths(nodes, "Folder");
+
+            IEnumerable<string> projOnlyFiles = existingFiles.Except(filePaths);
+            IEnumerable<string> projOnlyFolders = existingFolders.Except(folderPaths);
+
+            IEnumerable<string> diskOnlyFiles = filePaths.Except(existingFiles);
+            IEnumerable<string> diskOnlyFolders = folderPaths.Except(existingFolders);
+
+            bool ok = true;
+            if (diskOnlyFolders.Count() > 0) {
+                ok = false;
+                Console.WriteLine("Missing folders: " + string.Join(", ", diskOnlyFolders));
+            }
+
+            if (diskOnlyFiles.Count() > 0) {
+                ok = false;
+                Console.WriteLine("Missing files: " + string.Join(", ", diskOnlyFiles));
+            }
+
+            return ok;
         }
 
         private static void UpdateProjectFile(
@@ -136,7 +200,11 @@ namespace X2ProjectGenerator
                 .Select(node =>
                 {
                     Debug.Assert(node.Attributes != null, "node.Attributes != null");
-                    return node.Attributes["Include"].Value;
+                    string val = node.Attributes["Include"].Value;
+                    if (nodeName == "Folder") {
+                        val = val.TrimEnd('\\');
+                    }
+                    return val;
                 })
                 .ToArray();
         }
@@ -144,7 +212,7 @@ namespace X2ProjectGenerator
         private static XmlNode CreateItemNode(XmlNode projectNode, string nodeName, string path)
         {
             XmlDocument projectFile = projectNode.OwnerDocument;
-            Debug.Assert(projectFile != null, nameof(projectFile) + " != null");
+            Debug.Assert(projectFile != null, "projectFile != null");
             
             XmlNode node = projectFile.CreateElement(nodeName, projectNode.NamespaceURI);
             XmlAttribute includeAttribute = projectFile.CreateAttribute("Include");

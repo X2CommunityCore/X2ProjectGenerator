@@ -25,3 +25,13 @@ X2ProjectGenerator.exe "C:\Users\xyman\Documents\Firaxis ModBuddy\XCOM - War of 
 
 **TIP**: to open a command line prompt in the folder where you downloaded the `X2ProjectGenerator.exe`
 simply type `cmd` in the file explorer's address bar and hit enter
+
+## Additional flags
+
+### `--verify-only`
+
+Don't write to the project file. Instead throw an exception if entries would be added to the project file.
+
+### `--exclude-contents`
+
+Folder names starting with `Content` will be ignored (commonly `Content` and `ContentForCook`).
