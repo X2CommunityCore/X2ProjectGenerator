@@ -34,8 +34,7 @@ namespace X2ProjectGenerator
 
             IEnumerable<string> filesQuery = Directory.EnumerateFiles(projectPath, "*", SearchOption.AllDirectories)
                 .Where(path => path != projectFilePath)
-                .Select(path => path.Split(new[] {projectPath}, 2, StringSplitOptions.RemoveEmptyEntries))
-                .Select(strings => strings[0])
+                .Select(path => RemovePrefix(path, projectPath))
                 .Select(path => path.Replace('/', '\\'))
                 .Select(path => path.TrimStart('\\'));
 
@@ -79,6 +78,15 @@ namespace X2ProjectGenerator
             } else {
                 UpdateProjectFile(projectFile, files, folderPaths);
                 projectFile.Save(projectFilePath);
+            }
+        }
+
+        private static string RemovePrefix(string Test, string Prefix)
+        {
+            if (Test.StartsWith(Prefix)) {
+                return Test.Substring(Prefix.Length);
+            } else {
+                throw new Exception("String " + Test + "does not start with " + Prefix);
             }
         }
 
