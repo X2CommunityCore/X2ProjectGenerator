@@ -73,15 +73,16 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Install X2ProjectGenerator
+      shell: pwsh
       run: |
-        curl -o X2ProjectGenerator.exe -L https://github.com/Xymanek/X2ProjectGenerator/releases/download/v1.1/X2ProjectGenerator.exe
-        chmod +x X2ProjectGenerator.exe
+        Invoke-WebRequest -UseBasicParsing -Uri https://github.com/Xymanek/X2ProjectGenerator/releases/download/v1.1/X2ProjectGenerator.exe -OutFile X2ProjectGenerator.exe
     - name: Check project file
+      shell: pwsh
       run: |
-        ./X2ProjectGenerator.exe YOUR_MOD_NAME_HERE/ --exclude-contents --verify-only
+        .\X2ProjectGenerator.exe "YOUR_MOD_NAME_HERE\" --exclude-contents --verify-only
 ```
