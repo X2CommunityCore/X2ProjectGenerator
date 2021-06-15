@@ -9,20 +9,20 @@ namespace X2ProjectGenerator
 {
     internal static class Program
     {
-        public static void Main(string[] _args)
+        public static void Main(string[] args)
         {
-            HashSet<string> args = new HashSet<string>(_args);
+            HashSet<string> argsSet = new HashSet<string>(args);
 
-            bool verifyOnly = args.Remove("--verify-only");
-            bool excludeContents = args.Remove("--exclude-contents");
+            bool verifyOnly = argsSet.Remove("--verify-only");
+            bool excludeContents = argsSet.Remove("--exclude-contents");
 
-            if (args.Count == 0) {
+            if (argsSet.Count == 0) {
                 throw new Exception("Missing project directory");
-            } else if (args.Count > 1) {
+            } else if (argsSet.Count > 1) {
                 throw new Exception("Too many arguments");
             }
 
-            string projectPath = args.First();
+            string projectPath = argsSet.First();
             Console.WriteLine("Project directory is " + projectPath);
 
             string projectFilePath = GetX2ProjectFilePath(projectPath);
@@ -81,12 +81,12 @@ namespace X2ProjectGenerator
             }
         }
 
-        private static string RemovePrefix(string Test, string Prefix)
+        private static string RemovePrefix(string test, string prefix)
         {
-            if (Test.StartsWith(Prefix)) {
-                return Test.Substring(Prefix.Length);
+            if (test.StartsWith(prefix)) {
+                return test.Substring(prefix.Length);
             } else {
-                throw new Exception("String " + Test + "does not start with " + Prefix);
+                throw new Exception("String " + test + "does not start with " + prefix);
             }
         }
 
